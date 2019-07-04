@@ -22,7 +22,7 @@ public class UserService
 
     public boolean exists(String login)
     {
-        return findByLogin(login) != null;
+        return userRepository.existsUserByLogin(login);
     }
 
     public void createUser(User user) throws Exception
