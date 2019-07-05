@@ -39,15 +39,14 @@
     <div th:if="${message} != null">
         <label class="text-info">[[${message}]]</label>
     </div>
-    <div th:if="${categories != null}">
-        <div th:each="category : ${categories}">
+    <div th:if="${questions != null and questions.size() != 0}">
+        <div th:each="question : ${questions}">
+            <div th:text="${question.getMessage()}"></div>
             <form method="get" action="/question">
-                <input type="hidden" name="catid" th:value="${category.getId()}"/>
-                <input type="submit" th:value="${category.getTitle()}"/>
+
             </form>
         </div>
     </div>
-    <div th:if="${categories == null}">No categories</div>
 </div>
 </body>
 </html>
