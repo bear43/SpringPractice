@@ -19,12 +19,13 @@
             <a class="navbar-brand" href="/">Aki</a>
         </div>
         <div>
-            <ul class="nav navbar-nav">
+            <ul class="nav navbar-nav" th:if="${user.isAdmin() == true}">
+                <li class="navbar-link"><a href="/add_category">Add category</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 <form id="log_out_form" th:action="@{/logout}" method="post">
                 </form>
-                <li class="navbar-link"><a href="#" id="log_out">Выйти</a></li>
+                <li class="navbar-link"><a href="#" id="log_out">Sign out</a></li>
                 <script>
                     $("#log_out").on("click", function ()
                     {
@@ -39,15 +40,114 @@
     <div th:if="${message} != null">
         <label class="text-info">[[${message}]]</label>
     </div>
-    <div th:if="${categories != null}">
+    <div th:if="${categories != null}" id="categories">
         <div th:each="category : ${categories}">
-            <form method="get" action="/question">
-                <input type="hidden" name="catid" th:value="${category.getId()}"/>
-                <input type="submit" th:value="${category.getTitle()}"/>
-            </form>
+            <input type="hidden" th:value="${category.getId()}"/>
+            <input class="submitButton" type="button" th:text="${category.getTitle()}" value="curr"/>
         </div>
     </div>
     <div th:if="${categories == null}">No categories</div>
 </div>
+<script>
+    let htmlCategories = $("#categories")[0].innerHTML;
+    let currentQuestionsPool = [];
+    let currentQuestion;
+    let htmlQuestion =
+            '<p id="theQuestion">Question</p>' +
+            '<button id="yesButton">Yes</button>'+
+            '<button id="noButton">No</button>'+
+            '<button id="mainButton">Main</button>';
+    async function buildQuestion(id)
+    {
+        let question = await getQuestionById(id);
+        $("#theQuestion")[0].textContent = question.message;
+    }
+    function showCategories()
+    {
+        $("#categories")[0].innerHTML = htmlCategories;
+    }
+    function setCategoryClickCallback()
+    {
+        $(".submitButton").on("click", async function (data) {
+            let choosedCategory = data.target.previousElementSibling.value;
+            $("#categories")[0].innerHTML = "";
+            currentQuestionsPool = await getQuestionsIdsByCategoryId(choosedCategory);
+            $("#categories")[0].innerHTML = htmlQuestion;
+            setYesButtonClickCallback();
+            setNoButtonClickCallback();
+            setMainButtonClickCallback();
+            await showNextQuestion();
+        });
+    }
+    async function showNextQuestion()
+    {
+        if(currentQuestionsPool.length > 0)
+        {
+            currentQuestion = currentQuestionsPool[0];
+            currentQuestionsPool.shift();
+            await buildQuestion(currentQuestion);
+        }
+        else
+        {
+            showCategories();
+            setCategoryClickCallback();
+        }
+    }
+    function setYesButtonClickCallback()
+    {
+        $("#yesButton").on("click", async function () {
+            currentQuestionsPool = await getNextQuestionsByQuestionId(currentQuestion);
+            await showNextQuestion();
+        });
+    }
+    function setNoButtonClickCallback()
+    {
+        $("#noButton").on("click", async function() {
+            await showNextQuestion();
+        });
+    }
+    function setMainButtonClickCallback()
+    {
+        $("#mainButton").on("click", function() {
+            showCategories();
+            setCategoryClickCallback();
+        });
+    }
+    function setCallbacks()
+    {
+        setCategoryClickCallback();
+    }
+    async function sendPostReq(url, data, successFunction)
+    {
+        await $.ajax({
+            url: url,
+            type: "POST",
+            data: JSON.stringify(data),
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            success: successFunction
+        });
+    }
+    async function sendPostReqRet(url, data)
+    {
+        let retVal;
+        await sendPostReq(url, data, function(variable) { retVal = variable; });
+        return retVal;
+    }
+    async function getQuestionsIdsByCategoryId(id)
+    {
+        return await sendPostReqRet("/getCategoryQuestions", { category: id });
+    }
+    async function getQuestionById(id)
+    {
+        return await sendPostReqRet("/getQuestion", { id: id });
+    }
+    async function getNextQuestionsByQuestionId(id)
+    {
+        return await sendPostReqRet("/getNextQuestions", {id: id});
+    }
+    setCallbacks();
+</script>
 </body>
 </html>

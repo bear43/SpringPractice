@@ -1,12 +1,15 @@
 package service;
 
 import exception.CategoryAlreadyExistsException;
+import exception.NoSuchCategoryException;
+import exception.QuestionAlreadyExistsException;
 import model.Category;
 import model.Question;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import repository.CategoryRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,15 +47,37 @@ public class CategoryService
         return null;
     }
 
+    public List<Long> getFirstQuestionsListIds(long id)
+    {
+        List<Question> g = getFirstQuestionsList(id);
+        List<Long> ids = new ArrayList<>();
+        g.forEach(x -> ids.add(x.getId()));
+        return ids;
+    }
+
     public void createCategory(Category category) throws Exception
     {
         if(exists(category.getTitle())) throw new CategoryAlreadyExistsException();
         categoryRepository.saveAndFlush(category);
     }
 
-    public void createCategory(String title) throws Exception
+    public Category createCategory(String title) throws Exception
     {
-        createCategory(new Category(title));
+        return new Category(title);
+    }
+
+    public void addQuestion(Category category, Question question) throws Exception
+    {
+        if(category.getStartQuestions().stream().
+                anyMatch(x -> x.getMessage().equals(question.getMessage()))) throw new QuestionAlreadyExistsException();
+        category.getStartQuestions().add(question);
+        categoryRepository.saveAndFlush(category);
+    }
+
+    public void addQuestion(Long categoryId, Question question) throws Exception
+    {
+        Category category = categoryRepository.findById(categoryId).orElseThrow(NoSuchCategoryException::new);
+        addQuestion(category, question);
     }
 
     public void delete(Category category)

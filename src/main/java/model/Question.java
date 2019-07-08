@@ -1,13 +1,17 @@
 package model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.List;
 
 @Entity
 @Data
-public class Question
+public class Question implements Serializable
 {
     @Id
     @GeneratedValue
@@ -16,12 +20,15 @@ public class Question
     private String message;
 
     @ManyToOne
+    @JsonBackReference
     private Category category;
 
     @ManyToOne
+    @JsonBackReference
     private Question prevQuestion;
 
     @OneToMany(mappedBy = "prevQuestion")
+    @JsonManagedReference
     private List<Question> nextQuestionsOnPositive;
 
     public Question()
@@ -50,6 +57,7 @@ public class Question
         return nextQuestionsOnPositive != null && nextQuestionsOnPositive.size() != 0;
     }
 
+    @JsonIgnore
     public List<Question> getSiblingPositiveQuestions()
     {
         return prevQuestion.nextQuestionsOnPositive;

@@ -36,16 +36,11 @@
     </div>
 </nav>
 <div class="container">
-    <div th:if="${message} != null">
-        <label class="text-info">[[${message}]]</label>
-    </div>
-    <div th:if="${questions != null and questions.size() != 0}">
-        <div th:each="question : ${questions}">
-            <div th:text="${question.getMessage()}"></div>
-            <form method="get" action="/question">
-
-            </form>
-        </div>
+    <div>
+        <form method="post" action="/addCategory">
+            <input class="input-sm" type="text" name="title" placeholder="Category title"/>
+            <input class="input-sm" type="submit" value="Add"/>
+        </form>
     </div>
 </div>
 </body>
