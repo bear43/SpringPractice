@@ -15,6 +15,7 @@ import service.UserService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalLong;
 
 @Controller
 public class MainController
@@ -29,13 +30,10 @@ public class MainController
     private UserService userService;
 
     @GetMapping("/")
-    public String main_get(Model model)
+    public String main_get(Model model, RedirectAttributes attr)
     {
         model.addAttribute("categories", categoryService.findAll());
-        org.springframework.security.core.userdetails.User obj =
-                (org.springframework.security.core.userdetails.User)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        User user = userService.findByLogin(obj.getUsername());
-        model.addAttribute("user", user);
+        model.addAttribute("user", userService.getCurrentUser());
         return "main";
     }
 
@@ -63,21 +61,30 @@ public class MainController
 
     @PostMapping("/addQuestion")
     @ResponseBody
-    public String addQuestion_post(@RequestBody Map<String, Object> param)
+    public String addQuestion_post(@RequestBody Map<String, Object> param, RedirectAttributes attr)
     {
         try
         {
+            if(!userService.getCurrentUser().isAdmin())
+            {
+                return "You are not admin!";
+            }
             Long categoryId = (Long)param.get("categoryId");
-            Long prevId = (Long)param.get("prevId");
+            String categoryTitle = (String)param.get("categoryTitle");
+            Integer i = ((Integer)param.get("prevId"));
+            Long prevId = i != null ? i.longValue() : null;
             String message = (String)param.get("message");
             Question question = questionService.createQuestion(message, prevId);
-            if (categoryId == null)
+            if (categoryId == null && categoryTitle == null)
             {
                 questionService.createQuestion(question);
             }
             else
             {
-                categoryService.addQuestion(categoryId, question);
+                if(categoryTitle == null)
+                    categoryService.addQuestion(categoryId, question);
+                else
+                    categoryService.addQuestion(categoryTitle, question);
             }
             return "The question is created successful";
         }
@@ -90,6 +97,11 @@ public class MainController
     @PostMapping("/addCategory")
     public String addCategory_post(String title, RedirectAttributes attr)
     {
+        if(!userService.getCurrentUser().isAdmin())
+        {
+            attr.addFlashAttribute("message", "You are not admin!");
+            return "redirect:/";
+        }
         if(title != null)
         {
             try
@@ -99,22 +111,34 @@ public class MainController
             }
             catch (Exception ex)
             {
-                attr.addAttribute("message", ex.getMessage());
+                attr.addFlashAttribute("message", ex.getMessage());
                 return "redirect:/";
             }
         }
         else
         {
-            attr.addAttribute("message", "Cannot create the null named category");
+            attr.addFlashAttribute("message", "Cannot create the null named category");
             return "redirect:/";
         }
-        attr.addAttribute("message", "Category added successful");
+        attr.addFlashAttribute("message", "Category added successful");
         return "redirect:/";
     }
 
     @GetMapping("/add_category")
-    public String addCategory_get()
+    public String addCategory_get(RedirectAttributes attr)
     {
+        if(!userService.getCurrentUser().isAdmin())
+        {
+            attr.addFlashAttribute("message", "You are not admin!");
+            return "redirect:/";
+        }
         return "add_category";
+    }
+
+    @GetMapping("/add_question")
+    public String add_question_get(Model model)
+    {
+        model.addAttribute("categories", categoryService.findAll());
+        return "add_question";
     }
 }

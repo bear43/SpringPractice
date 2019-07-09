@@ -70,6 +70,7 @@ public class CategoryService
     {
         if(category.getStartQuestions().stream().
                 anyMatch(x -> x.getMessage().equals(question.getMessage()))) throw new QuestionAlreadyExistsException();
+        question.setCategory(category);
         category.getStartQuestions().add(question);
         categoryRepository.saveAndFlush(category);
     }
@@ -77,6 +78,12 @@ public class CategoryService
     public void addQuestion(Long categoryId, Question question) throws Exception
     {
         Category category = categoryRepository.findById(categoryId).orElseThrow(NoSuchCategoryException::new);
+        addQuestion(category, question);
+    }
+
+    public void addQuestion(String categoryTitle, Question question) throws Exception
+    {
+        Category category = categoryRepository.findByTitle(categoryTitle);
         addQuestion(category, question);
     }
 

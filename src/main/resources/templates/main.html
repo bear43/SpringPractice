@@ -21,6 +21,7 @@
         <div>
             <ul class="nav navbar-nav" th:if="${user.isAdmin() == true}">
                 <li class="navbar-link"><a href="/add_category">Add category</a></li>
+                <li class="navbar-link"><a href="#" id="questadd">Add question</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 <form id="log_out_form" th:action="@{/logout}" method="post">
@@ -38,7 +39,7 @@
 </nav>
 <div class="container">
     <div th:if="${message} != null">
-        <label class="text-info">[[${message}]]</label>
+        <label class="text-info" id="msgLabel">[[${message}]]</label>
     </div>
     <div th:if="${categories != null}" id="categories">
         <div th:each="category : ${categories}">
@@ -47,6 +48,15 @@
         </div>
     </div>
     <div th:if="${categories == null}">No categories</div>
+    <div hidden id="addQuestion">
+        <input class="input-sm" id="msg" type="text" placeholder="The question"/>
+        <select id="selectron" th:if="${categories} != null and ${categories.size()} != 0">
+            <th:block th:each="category : ${categories}">
+                <option th:text="${category.toString()}"></option>
+            </th:block>
+        </select>
+        <button class="input-sm" id="addButton">Add</button>
+    </div>
 </div>
 <script>
     let htmlCategories = $("#categories")[0].innerHTML;
@@ -57,6 +67,8 @@
             '<button id="yesButton">Yes</button>'+
             '<button id="noButton">No</button>'+
             '<button id="mainButton">Main</button>';
+    let addQuestBool = false;
+    let inCategoryMode = true;
     async function buildQuestion(id)
     {
         let question = await getQuestionById(id);
@@ -64,6 +76,7 @@
     }
     function showCategories()
     {
+        inCategoryMode = true;
         $("#categories")[0].innerHTML = htmlCategories;
     }
     function setCategoryClickCallback()
@@ -83,6 +96,7 @@
     {
         if(currentQuestionsPool.length > 0)
         {
+            inCategoryMode = false;
             currentQuestion = currentQuestionsPool[0];
             currentQuestionsPool.shift();
             await buildQuestion(currentQuestion);
@@ -110,12 +124,40 @@
     {
         $("#mainButton").on("click", function() {
             showCategories();
+            currentQuestion = null;
             setCategoryClickCallback();
         });
     }
     function setCallbacks()
     {
         setCategoryClickCallback();
+        $("#questadd").on("click", function () {
+            addQuestBool = !addQuestBool;
+            if(addQuestBool)
+            {
+                $("#addQuestion").removeAttr("hidden");
+                if(inCategoryMode)
+                    $("#selectron").removeAttr("hidden");
+                else
+                    $("#selectron").attr("hidden", "");
+            }
+            else
+            {
+                $("#addQuestion").attr("hidden", "");
+                $("#selectron").attr("hidden", "");
+            }
+        });
+        $("#addButton").on("click", async function(){
+            let category = $("#selectron")[0].value;
+            let msg = $("#msg")[0].value;
+            let ret = await sendPostReqRet("/addQuestion", {
+                categoryTitle: category,
+                prevId: currentQuestion,
+                message: msg
+            });
+            $("#msgLabel")[0].textContent = ret;
+            console.log($("#msgLabel")[0]);
+        });
     }
     async function sendPostReq(url, data, successFunction)
     {

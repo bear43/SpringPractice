@@ -37,11 +37,40 @@
 </nav>
 <div class="container">
     <div>
-        <form method="post" action="/addCategory">
-            <input class="input-sm" type="text" name="title" placeholder="Category title"/>
-            <input class="input-sm" type="submit" value="Add"/>
-        </form>
+        <input class="input-sm" type="text" placeholder="The question"/>
+        <select th:if="${categories} != null and ${categories.size()} != 0">
+            <th:block th:each="category : ${categories}">
+                <option th:text="${category.toString()}"></option>
+            </th:block>
+        </select>
+        <button class="input-sm" id="addButton">Add</button>
     </div>
 </div>
+<script>
+    $("#addButton").on("click", async function(){
+        await sendPostReqRet("/addQuestion", {
+            categoryTitle: category,
+
+        });
+    });
+    async function sendPostReq(url, data, successFunction)
+    {
+        await $.ajax({
+            url: url,
+            type: "POST",
+            data: JSON.stringify(data),
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            success: successFunction
+        });
+    }
+    async function sendPostReqRet(url, data)
+    {
+        let retVal;
+        await sendPostReq(url, data, function(variable) { retVal = variable; });
+        return retVal;
+    }
+</script>
 </body>
 </html>
