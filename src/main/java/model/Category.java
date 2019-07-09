@@ -16,6 +16,7 @@ public class Category implements Serializable
     @GeneratedValue
     private Long id;
 
+    @Column
     private String title;
 
     @OneToMany(mappedBy = "category", orphanRemoval = true, cascade = CascadeType.ALL)

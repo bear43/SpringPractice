@@ -22,6 +22,7 @@
             <ul class="nav navbar-nav" th:if="${user.isAdmin() == true}">
                 <li class="navbar-link"><a href="/add_category">Add category</a></li>
                 <li class="navbar-link"><a href="#" id="questadd">Add question</a></li>
+                <li class="navbar-link"><a href="#" id="questdel">Delete question</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 <form id="log_out_form" th:action="@{/logout}" method="post">
@@ -38,13 +39,11 @@
     </div>
 </nav>
 <div class="container">
-    <div th:if="${message} != null">
-        <label class="text-info" id="msgLabel">[[${message}]]</label>
-    </div>
+    <label class="text-info" id="msgLabel" th:text="${message != null} ? ${message} : ''"></label>
     <div th:if="${categories != null}" id="categories">
         <div th:each="category : ${categories}">
             <input type="hidden" th:value="${category.getId()}"/>
-            <input class="submitButton" type="button" th:text="${category.getTitle()}" value="curr"/>
+            <input class="submitButton" type="button" th:value="${category.getTitle()}"/>
         </div>
     </div>
     <div th:if="${categories == null}">No categories</div>
@@ -78,6 +77,7 @@
     {
         inCategoryMode = true;
         $("#categories")[0].innerHTML = htmlCategories;
+        $("#selectron").removeAttr("hidden");
     }
     function setCategoryClickCallback()
     {
@@ -97,6 +97,7 @@
         if(currentQuestionsPool.length > 0)
         {
             inCategoryMode = false;
+            $("#selectron").attr("hidden", "");
             currentQuestion = currentQuestionsPool[0];
             currentQuestionsPool.shift();
             await buildQuestion(currentQuestion);
@@ -147,16 +148,23 @@
                 $("#selectron").attr("hidden", "");
             }
         });
+        $("#questdel").on("click", async function(){
+            $("#msgLabel")[0].textContent = await sendPostReqRet("/deleteQuestion", {
+                questionId: currentQuestion
+            });
+        });
         $("#addButton").on("click", async function(){
-            let category = $("#selectron")[0].value;
+            let category;
+            if(inCategoryMode)
+                category = $("#selectron")[0].value;
+            else
+                category = null;
             let msg = $("#msg")[0].value;
-            let ret = await sendPostReqRet("/addQuestion", {
+            $("#msgLabel")[0].textContent = await sendPostReqRet("/addQuestion", {
                 categoryTitle: category,
                 prevId: currentQuestion,
                 message: msg
             });
-            $("#msgLabel")[0].textContent = ret;
-            console.log($("#msgLabel")[0]);
         });
     }
     async function sendPostReq(url, data, successFunction)

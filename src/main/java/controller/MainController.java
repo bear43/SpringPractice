@@ -141,4 +141,27 @@ public class MainController
         model.addAttribute("categories", categoryService.findAll());
         return "add_question";
     }
+
+    @PostMapping("/deleteQuestion")
+    @ResponseBody
+    public String deleteQuestion(@RequestBody Map<String, Long> param)
+    {
+        Long id = param.get("questionId");
+        if(id != null)
+        {
+            try
+            {
+                questionService.deleteById(id);
+            }
+            catch (Exception ex)
+            {
+                return ex.getMessage();
+            }
+        }
+        else
+        {
+            return "Cannot delete null question";
+        }
+        return "The question is deleted";
+    }
 }

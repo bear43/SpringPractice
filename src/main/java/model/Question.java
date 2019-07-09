@@ -17,17 +17,18 @@ public class Question implements Serializable
     @GeneratedValue
     private Long id;
 
+    @Column
     private String message;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JsonBackReference
     private Category category;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JsonBackReference
     private Question prevQuestion;
 
-    @OneToMany(mappedBy = "prevQuestion")
+    @OneToMany(mappedBy = "prevQuestion", fetch = FetchType.LAZY, orphanRemoval = true)
     @JsonManagedReference
     private List<Question> nextQuestionsOnPositive;
 

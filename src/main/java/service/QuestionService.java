@@ -1,5 +1,6 @@
 package service;
 
+import exception.CustomException;
 import exception.NoSuchQuestionException;
 import exception.QuestionAlreadyExistsException;
 import model.Category;
@@ -61,5 +62,12 @@ public class QuestionService
     public void delete(Question question)
     {
         questionRepository.delete(question);
+    }
+
+    public void deleteById(long id) throws Exception
+    {
+        Question question = getQuestionById(id);
+        if(question == null) throw new NoSuchQuestionException();
+        delete(question);
     }
 }
