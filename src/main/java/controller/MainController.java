@@ -164,4 +164,32 @@ public class MainController
         }
         return "The question is deleted";
     }
+
+    @GetMapping("/deleteCategory")
+    public String deleteCategory(Model model)
+    {
+        model.addAttribute("categories", categoryService.findAll());
+        return "del_category";
+    }
+
+    @PostMapping("/deleteCategory")
+    public String deleteCategory(Long id, RedirectAttributes attributes)
+    {
+        try
+        {
+            if(id == null)
+            {
+                attributes.addFlashAttribute("message", "Cannot delete null category");
+                return "redirect:/del_category";
+            }
+            categoryService.delete(id);
+            attributes.addFlashAttribute("message", "Category has been deleted");
+            return "redirect:/";
+        }
+        catch (Exception ex)
+        {
+            attributes.addFlashAttribute("message", "Category has not been deleted: " + ex.getMessage());
+            return "redirect:/del_category";
+        }
+    }
 }

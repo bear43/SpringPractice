@@ -27,10 +27,10 @@
 </nav>
 <div class="container">
     <div th:if="${param.error}">
-        <p class="text-danger">Неверные имя пользователя/пароль.</p>
+        <p class="text-danger">Wrong login or password</p>
     </div>
     <div th:if="${param.logout}">
-        <p class="text-success">Вы успешно вышли из аккаунта!</p>
+        <p class="text-success">Successful loged out</p>
     </div>
     <div th:if="${message} != null">
         [[${message}]]

@@ -97,4 +97,13 @@ public class CategoryService
         Category category = findByTitle(title);
         if(category != null) categoryRepository.delete(category);
     }
+
+    public void delete(long id) throws Exception
+    {
+        Category category = findById(id);
+        if(category != null)
+            delete(category);
+        else
+            throw new NoSuchCategoryException();
+    }
 }
