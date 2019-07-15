@@ -68,6 +68,8 @@ public class CategoryService
 
     public void addQuestion(Category category, Question question) throws Exception
     {
+        if(category == null) throw new NoSuchCategoryException();
+        if(question == null) return;
         if(category.getStartQuestions().stream().
                 anyMatch(x -> x.getMessage().equals(question.getMessage()))) throw new QuestionAlreadyExistsException();
         question.setCategory(category);
